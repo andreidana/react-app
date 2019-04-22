@@ -1,15 +1,20 @@
 import React, { Component } from 'react';
 import './App.css';
 import Person from './Person/Person';
+import Validation from './Validation/Validation';
+import CharComponent from './CharComponent/CharComponent';
 
 class App extends Component {
   state = {
     persons: [
-      {name: 'Andrei', age: 28},
-      {name: 'Test', age: 21},
-      {name: 'Altu', age: 17},
-      {name: 'Tot el', age: 89},
-    ]
+      {id: 1, name: 'Andrei', age: 28},
+      {id: 2, name: 'Test', age: 21},
+      {id: 3, name: 'Altu', age: 17},
+      {id: 4, name: 'Tot el', age: 89},
+    ],
+    showPersons: false,
+    enteredText: '',
+    characterCount: 0
   }
 
   switchNameHandler = (newName) => {
@@ -22,14 +27,68 @@ class App extends Component {
     });
   }
 
-  nameChangedHandler = (event) => {
+  deletePersonHandler = (personIndex) => {
+    const persons = this.state.persons.slice();
+    persons.splice(personIndex, 1);
+    this.setState({persons: persons});
+  }
+
+  togglePersonsHandler = () => {
+    const doesShow = this.state.showPersons;
+    this.setState({showPersons : !doesShow});
+  }
+ 
+  nameChangedHandler = (event, id) => {
+    const personIndex = this.state.persons.findIndex(p => p.id === id);
+    const person = { ...this.state.persons.find(p => p.id === id) };
+    person.name = event.target.value;
+    const persons = [...this.state.persons];
+    persons[personIndex] = person;
+    this.setState({ persons: persons });
+  }
+
+  togglePersons = (persons) => {
+    if (this.state.showPersons) {
+      persons = (
+      <div>
+        {this.state.persons.map((person, index) => {
+          return (<Person
+            click={() => this.deletePersonHandler(index)}
+            changed={event => this.nameChangedHandler(event, person.id)}
+            name={person.name}
+            age={person.age}
+            key={person.id}/>);
+        })}
+      </div>);
+    }
+    return persons;
+  }
+
+  setCharacters(event) {
     this.setState({
-      persons: [
-        {name: event.target.value, age: 31},
-        {name: 'Larisa', age: 29},
-        {name: 'Cristina', age: 1},
-      ]
+      enteredText: event.target.value,
+      characterCount: event.target.value.length
     });
+  }
+
+  createCharComponents() {
+    const characters = this.state.enteredText.map(char => char);
+
+    return (<div>
+      {
+        characters.map((char, index) => {
+          return (<CharComponent 
+            click={() => this.deleteChar(index)}
+            charValue={char}/>)
+        })
+      }
+    </div>)
+  }
+
+  deleteChar(index) {
+    const characters = this.state.enteredText.splice();
+    characters.splice(index, 1);
+    this.setState({enteredText: characters});
   }
 
   render() {
@@ -41,23 +100,24 @@ class App extends Component {
       cursor: 'pointer'
     }
 
+    let persons = null;
+    let characters = null;
+
+    persons = this.togglePersons(persons);
+    characters = this.createCharComponents();
+
     return (
       <div className="app">
         <h1>Hello World, React app!</h1>
-        <button
-          style={style}
-          onClick={this.switchNameHandler.bind(this, 'TO-DO')}>Switch Name</button>
-        <Person
-          name={this.state.persons[0].name}
-          age={this.state.persons[0].age}
-          changed={this.nameChangedHandler}/>
-        <Person
-          name={this.state.persons[1].name}
-          age={this.state.persons[1].age}/>
-        <Person
-          name={this.state.persons[2].name}
-          age={this.state.persons[2].age}
-          click={this.switchNameHandler.bind(this, 'WIP')}><h1>My Hobbies: Reading</h1></Person>
+        <button style={style} onClick={this.switchNameHandler.bind(this, 'TO-DO')}>Switch Name</button>
+        <button style={style} onClick={this.togglePersonsHandler}>Toggle Persons</button>
+        <br></br>
+        {persons}
+        <br></br>
+        <input type="text" onChange={(event) => this.setCharacters(event)}/>
+        <p>{this.state.characterCount}</p>
+        <Validation textLength={this.state.characterCount}></Validation>
+        {characters}
       </div>
     );
   }
